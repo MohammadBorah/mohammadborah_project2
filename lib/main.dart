@@ -1,139 +1,150 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:fluttertoast/fluttertoast.dart';
+
+import 'students_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Attendance System',
-      home: const AttendanceForm(),
+      home: MyHomePage(),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
     );
   }
 }
 
-class AttendanceForm extends StatefulWidget {
-  const AttendanceForm({Key? key}) : super(key: key);
-
+class MyHomePage extends StatefulWidget {
   @override
-  _AttendanceFormState createState() => _AttendanceFormState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _AttendanceFormState extends State<AttendanceForm> {
-  final TextEditingController _controllerName = TextEditingController();
-  final TextEditingController _controllerID = TextEditingController();
-  final TextEditingController _controllerClass = TextEditingController();
-  bool _loading = false;
+class _MyHomePageState extends State<MyHomePage> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController idController = TextEditingController();
+  final TextEditingController courseController = TextEditingController();
 
-  void submitAttendance() async {
-    setState(() {
-      _loading = true;
-    });
-
-    final String name = _controllerName.text;
-    final String id = _controllerID.text;
-    final String className = _controllerClass.text;
-
-    if (name.isEmpty || id.isEmpty || className.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please fill in all fields.'),
-        ),
+  Future<void> sendDataToPHP() async {
+    // Check for empty values
+    if (nameController.text.isEmpty || idController.text.isEmpty || courseController.text.isEmpty) {
+      Fluttertoast.showToast(
+        msg: 'Please fill in all fields',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
       );
-      setState(() {
-        _loading = false;
-      });
       return;
     }
-//id19881852_mohammad
-    //Mo@12345 password
-    final Map<String, dynamic> attendanceData = {
-      'name': name,
-      'id': id,
-      'class': className,
-    };
 
-    final Uri apiUrl = Uri.parse('https://profitech.000webhostapp.com/attendance.php');
+    final url = 'https://profitech.000webhostapp.com/insert.php';
+    final response = await http.post(
+      Uri.parse(url),
+      body: {
+        'name': nameController.text,
+        'id': idController.text,
+        'course': courseController.text,
+      },
+    );
 
+    if (response.statusCode == 200) {
+      // Data sent successfully
+      print('Data sent successfully');
 
-    try {
-      final http.Response response = await http.post(
-        apiUrl,
-        body: jsonEncode(attendanceData),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+      // Show success message with fluttertoast
+      Fluttertoast.showToast(
+        msg: 'Data sent successfully',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+        fontSize: 16.0,
       );
+    } else {
+      // Error in sending data
+      print('Error in sending data');
 
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Attendance submitted successfully!'),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit attendance. Status code: ${response.statusCode}'),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-        ),
+      // Show error message with fluttertoast
+      Fluttertoast.showToast(
+        msg: 'Error in sending data',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
       );
-    } finally {
-      setState(() {
-        _loading = false;
-      });
     }
+  }
+
+  void navigateToStudentsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => StudentsPage()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Attendance System'),
-        centerTitle: true,
+        title: Text('Students Attendance'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 16.0),
             TextField(
-              controller: _controllerName,
-              decoration: const InputDecoration(labelText: 'Name'),
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: 'Name',
+                border: OutlineInputBorder(),
+              ),
             ),
-            const SizedBox(height: 16.0),
+            SizedBox(height: 12),
             TextField(
-              controller: _controllerID,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'ID'),
+              controller: idController,
+              decoration: InputDecoration(
+                labelText: 'ID',
+                border: OutlineInputBorder(),
+              ),
             ),
-            const SizedBox(height: 16.0),
+            SizedBox(height: 12),
             TextField(
-              controller: _controllerClass,
-              decoration: const InputDecoration(labelText: 'Class'),
+              controller: courseController,
+              decoration: InputDecoration(
+                labelText: 'Course',
+                border: OutlineInputBorder(),
+              ),
             ),
-            const SizedBox(height: 32.0),
+            SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _loading ? null : submitAttendance,
-              child: _loading
-                  ? const CircularProgressIndicator()
-                  : const Text('Submit Attendance'),
+              onPressed: sendDataToPHP,
+              child: Text('Send Attendance'),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.blue,
+                padding: EdgeInsets.symmetric(vertical: 16),
+              ),
             ),
-
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: navigateToStudentsPage,
+              child: Text('View Students'),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.green,
+                padding: EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
           ],
         ),
       ),
