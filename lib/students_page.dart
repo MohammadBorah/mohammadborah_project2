@@ -20,7 +20,7 @@ class _StudentsPageState extends State<StudentsPage> {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
-      return response.body;
+      return response.body.trim(); // Trim removes leading/trailing whitespaces
     } else {
       return 'Error fetching students';
     }
@@ -48,7 +48,11 @@ class _StudentsPageState extends State<StudentsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: data.map((studentInfo) {
                     final studentDetails = studentInfo.split(',');
-                    return Text('ID: ${studentDetails[0]} - Name: ${studentDetails[1]} - ID Number: ${studentDetails[2]} - Course: ${studentDetails[3]}');
+                    if (studentDetails.length >= 4) {
+                      return Text('ID: ${studentDetails[0]} - Name: ${studentDetails[1]} - ID Number: ${studentDetails[2]} - Course: ${studentDetails[3]}');
+                    } else {
+                      return Text('Invalid student information');
+                    }
                   }).toList(),
                 );
               } else {
